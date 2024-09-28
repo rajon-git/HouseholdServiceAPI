@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from .models import Order
 from .serializers import OrderSerializer
-from cart.models import Cart  # Adjust this based on your project structure
+from cart.models import Cart  
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()

@@ -18,7 +18,7 @@ from django.contrib.auth import authenticate,login,logout
 class UserRegistrationApiView(APIView):
     serializer_class = RegistrationSerializer
 
-    def post(self,request):
+    def post(self, request):
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
@@ -27,13 +27,18 @@ class UserRegistrationApiView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             confirm_link = f"http://127.0.0.1:8000/auth/activate/{uid}/{token}/"
             email_subject = "Confirm Your Account"
-            email_body = render_to_string('confirm_email.html',{'confirm_link': confirm_link})
+            email_body = render_to_string('confirm_email.html', {'confirm_link': confirm_link})
 
-            email = EmailMultiAlternatives(email_subject,'',to=[user.email])
-            email.attach_alternative(email_body,"text/html")
-            email.send()
-            return Response("Check your email for confirmation")
-        return Response(serializer.errors)
+            try:
+                email = EmailMultiAlternatives(email_subject, '', to=[user.email])
+                email.attach_alternative(email_body, "text/html")
+                email.send()
+            except Exception as e:
+                return Response({"error": "Email could not be sent."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            return Response({"message": "Check your email for confirmation"}, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 def activate(request, uid64, token):
     try:
@@ -52,22 +57,20 @@ def activate(request, uid64, token):
     
 class UserLoginApiView(APIView):
     def post(self, request):
-        serializer = UserLoginSerializer(data=request.data)
-        
+        serializer = UserLoginSerializer(data = self.request.data)
         if serializer.is_valid():
             username = serializer.validated_data['username']
             password = serializer.validated_data['password']
 
-            user = authenticate(username=username, password=password)
+            user = authenticate(username= username, password=password)
             
             if user:
                 token, _ = Token.objects.get_or_create(user=user)
-                login(request, user)  # This logs the user in for session-based authentication
-                return Response({'token': token.key, 'user_id': user.id}, status=status.HTTP_200_OK)
+                login(request, user)
+                return Response({'token' : token.key, 'user_id' : user.id})
             else:
-                return Response({'error': "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error' : "Invalid Credential"})
+        return Response(serializer.errors)
     
 class UserLogoutApiView(APIView):
     def get(self, request):
