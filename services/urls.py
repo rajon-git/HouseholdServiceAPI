@@ -6,6 +6,6 @@ router = DefaultRouter()
 router.register('all', views.ServiceListViewSet)
 
 urlpatterns = [
-    path('<int:id>/', views.ServiceDetailView.as_view(), name='service-detail'),
     path('', include(router.urls)),
+    path('<int:id>/', views.ServiceDetailView.as_view(), name='service-detail'),
 ]
