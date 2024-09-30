@@ -74,13 +74,7 @@ class UserLoginApiView(APIView):
     
 class UserLogoutApiView(APIView):
     def post(self, request):
-        if request.user.is_authenticated:
-            try:
-                token = request.user.auth_token
-                token.delete()
-            except Token.DoesNotExist:
-                pass  
-            logout(request) 
-            return Response({"message": "Logout successful."}, status=status.HTTP_200_OK)
-        else:
-            return Response({"error": "User is not authenticated."}, status=status.HTTP_401_UNAUTHORIZED)
+        token = request.user.auth_token
+        token.delete()
+        return Response({"detail": "Successfully logged out. Redirecting to login."}, status=status.HTTP_200_OK)
+           
