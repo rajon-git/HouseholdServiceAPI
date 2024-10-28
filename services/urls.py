@@ -1,11 +1,11 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from . import views
-
-router = DefaultRouter()
-router.register('all', views.ServiceListViewSet)
+from django.urls import path
+from .views import CategoryListCreateView, CategoryDetailView, ServiceListCreateView, ServiceDetailView, ReviewListCreateView, ReviewDetailView
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('all/<int:id>/', views.ServiceDetailView.as_view(), name='service-detail'),
+    path('categories/', CategoryListCreateView.as_view(), name='category'),
+    path('categories/<int:pk>/', CategoryDetailView.as_view(), name='category-detail'),
+    path('', ServiceListCreateView.as_view(), name='services'),
+    path('<int:pk>/', ServiceDetailView.as_view(), name='service-detail'),
+    path('reviews/', ReviewListCreateView.as_view(), name='review'),  
+    path('reviews/<int:pk>/', ReviewDetailView.as_view(), name='review-detail'),
 ]

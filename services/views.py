@@ -1,25 +1,49 @@
-# views.py
-from rest_framework import viewsets
-from .models import Service
-from .serializers import ServiceSerializer
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework import generics
+from .models import Category, Service, Review
+from .serializers import CategorySerializer, ServiceSerializer, ReviewSerializer
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 
-class ServiceListViewSet(viewsets.ModelViewSet):
+
+class CategoryListCreateView(generics.ListCreateAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+class CategoryDetailView(generics.RetrieveAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+        
+class ServiceListCreateView(generics.ListCreateAPIView):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
 
-class ServiceDetailView(APIView):
-    def get_object(self, id):
-        try:
-            return Service.objects.get(id=id)
-        except Service.DoesNotExist:
-            return None
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter
+    ]
 
-    def get(self, request, id):
-        service = self.get_object(id)
-        if service is not None:
-            serializer = ServiceSerializer(service)
-            return Response(serializer.data)
-        return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+    filterset_fields = ['category__slug'] 
+    search_fields = ['title']
+    ordering_fields = ['service_fee', 'is_available']
+    ordering = ['service_fee']
+
+class ServiceDetailView(generics.RetrieveAPIView):
+    queryset = Service.objects.all()
+    serializer_class = ServiceSerializer
+
+    def get(self, request, *args, **kwargs):
+        try:
+            return super().get(request, *args, **kwargs)
+        except Exception as e:
+            print(f"Error: {e}")
+            return Response({"error": "Service not found"}, status=404)
+
+
+class ReviewListCreateView(generics.ListCreateAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+
+class ReviewDetailView(generics.RetrieveAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
