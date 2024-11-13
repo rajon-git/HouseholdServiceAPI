@@ -3,6 +3,7 @@ from .models import Category, Service, Review
 from .serializers import CategorySerializer, ServiceSerializer, ReviewSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+from .pagination import CustomPagination
 
 
 class CategoryListCreateView(generics.ListCreateAPIView):
@@ -27,6 +28,12 @@ class ServiceListCreateView(generics.ListCreateAPIView):
     search_fields = ['title']
     ordering_fields = ['service_fee', 'is_available']
     ordering = ['service_fee']
+
+    pagination_class = CustomPagination
+
+class FeaturedServiceListView(generics.ListAPIView):
+    queryset = Service.objects.filter(is_featured=True)
+    serializer_class = ServiceSerializer 
 
 class ServiceDetailView(generics.RetrieveAPIView):
     queryset = Service.objects.all()

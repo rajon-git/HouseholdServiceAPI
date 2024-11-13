@@ -1,15 +1,20 @@
 from rest_framework import serializers
-from .models import Order
-from cart.models import CartItem
+from .models import Order, OrderItem
+from cart.models import CartItem, Service
 
-class CartItemSerializer(serializers.ModelSerializer):
+class OrderItemSerializer(serializers.ModelSerializer):
+    service = serializers.PrimaryKeyRelatedField(queryset=Service.objects.all())
+
     class Meta:
-        model = CartItem
-        fields = ['id', 'service', 'quantity']
+        model = OrderItem
+        fields = ['service', 'quantity']
 
 class OrderSerializer(serializers.ModelSerializer):
-    items = CartItemSerializer(source='cart.items', many=True, read_only=True)
+    items = OrderItemSerializer(many=True, write_only=True)
 
     class Meta:
         model = Order
-        fields = ['id', 'user', 'cart', 'total_amount', 'created_at', 'updated_at', 'items']
+        fields = ['user', 'cart', 'items', 'total_price', 'status']
+        read_only_fields = ['total_price', 'status']
+
+   

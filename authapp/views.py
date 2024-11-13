@@ -86,6 +86,11 @@ class LoginView(generics.GenericAPIView):
 
             return Response({
                 "token": token.key, 
+                "user": { 
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email
+                },
                 "message": "Login successful."
             }, status=status.HTTP_200_OK)
         

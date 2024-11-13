@@ -1,5 +1,7 @@
 from pathlib import Path
 from decouple import config
+from corsheaders.defaults import default_headers
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,9 +29,8 @@ INSTALLED_APPS = [
     
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
-
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -37,9 +38,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
-CORS_ORIGIN_ALLOW_ALL = True
+
+# CORS_ALLOW_ALL_ORIGINS = True
+
+# CORS_ALLOW_HEADERS = list(default_headers) + [
+#     'session_key',
+# ]
+
 # CORS_ALLOWED_ORIGINS = [
 #     "http://localhost:3000", 
 # ]
@@ -110,10 +116,11 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
 
 STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -134,3 +141,18 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',  
     ],
 }
+
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 3600
+SESSION_SAVE_EVERY_REQUEST = False
+SESSION_COOKIE_SECURE = True  # Use True for cross-origin session cookies
+CSRF_COOKIE_SECURE = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_SAMESITE = 'None'  # None for cross-origin requests

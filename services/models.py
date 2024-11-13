@@ -20,6 +20,8 @@ class Service(models.Model):
     category = models.ForeignKey(Category, related_name='category', on_delete=models.CASCADE)
     service_fee = models.IntegerField()
     is_available = models.BooleanField(default=True)
+    is_featured = models.BooleanField(default=False)
+    stock = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return self.title

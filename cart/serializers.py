@@ -3,7 +3,7 @@ from .models import Cart, CartItem
 from services.serializers import ServiceSerializer
 
 class CartItemSerializer(serializers.ModelSerializer):
-    service = ServiceSerializer()
+    service = ServiceSerializer(read_only=True)
     class Meta:
         model = CartItem
         fields = "__all__"
