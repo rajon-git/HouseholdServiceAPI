@@ -53,15 +53,12 @@ class OrderCreateView(APIView):
         cart.items.all().delete()
         cart.is_active = False  
         cart.save()
-
-        # **Delete the cart** after the order has been processed
         # cart.delete()
         subject = f"Order Confirmation - Order #{order.id}"
         message = f"Dear {request.user.username},\n\nYour order has been successfully placed!\nOrder ID: {order.id}\nTotal Price: ${order.total_price}\n\nThank you for shopping with us!"
         admin_message = f"A new order has been placed.\nOrder ID: {order.id}\nCustomer: {request.user.username}\nTotal Price: ${order.total_price}"
 
         try:
-            # Send email to the user
             send_mail(
                 subject,
                 message,
