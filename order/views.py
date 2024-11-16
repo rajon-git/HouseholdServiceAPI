@@ -1,88 +1,108 @@
-from rest_framework import status
+from rest_framework import status, generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Order, OrderItem
-from .serializers import OrderSerializer
-from cart.models import Cart, CartItem, Service
 from django.core.mail import send_mail
 from django.conf import settings
-from rest_framework import generics, permissions
+from .models import Order, OrderItem
+from cart.models import Cart, CartItem, Service
 from .serializers import OrderSerializer
 
-
 class OrderCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]  # Ensure only authenticated users can access
+
     def post(self, request):
-        if not request.user.is_authenticated:
-            return Response({"detail": "Authentication credentials were not provided."},
-                             status=status.HTTP_401_UNAUTHORIZED)
+        user = request.user
+        # Address details from the request
+        name = request.data.get('name')
+        phone = request.data.get('phone')
+        house = request.data.get('house')
+        road= request.data.get('road')
+        ward= request.data.get('ward')
+        city = request.data.get('city')
+        state = request.data.get('state')
+        payment_type = request.data.get('payment_type', 'cash')
 
-        cart = Cart.objects.filter(
-            user=request.user,
-            is_active=True,
-            items__is_active=True  
-        ).first()
+        # Validate required address fields
+        if not all([name, phone, house, road, ward, city, state]):
+            return Response({"detail": "All address fields are required."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Fetch the active cart for the user
+        cart = Cart.objects.filter(user=user, is_active=True, items__is_active=True).first()
         if not cart:
-            return Response({"detail": "Cart not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Active cart not found."}, status=status.HTTP_404_NOT_FOUND)
 
         order_items_data = request.data.get('items', [])
         if not order_items_data:
-            return Response({"detail": "No items provided."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "No items provided in the request."}, status=status.HTTP_400_BAD_REQUEST)
 
         total_price = 0
-
-        order = Order.objects.create(user=request.user, cart=cart)
+        order = Order.objects.create(user=user, cart=cart, payment_type=payment_type)  # Create the order instance
 
         for item_data in order_items_data:
-            try:
-                service = Service.objects.get(id=item_data['service'])
-            except Service.DoesNotExist:
-                return Response({"detail": "Service not found."}, status=status.HTTP_400_BAD_REQUEST)
+            service_id = item_data.get('service')
+            quantity = item_data.get('quantity')
+
+            if not service_id or not quantity:
+                return Response({"detail": "Service ID and quantity are required for all items."}, status=status.HTTP_400_BAD_REQUEST)
 
             try:
+                service = Service.objects.get(id=service_id)
                 cart_item = CartItem.objects.get(cart=cart, service=service)
-            except CartItem.DoesNotExist:
-                return Response({"detail": "Cart item not found for the selected service."}, status=status.HTTP_400_BAD_REQUEST)
+            except (Service.DoesNotExist, CartItem.DoesNotExist):
+                return Response({"detail": f"Invalid service or cart item: {service_id}"}, status=status.HTTP_400_BAD_REQUEST)
 
+            # Calculate total price and create OrderItem
             total_price += cart_item.get_total_price()
+            OrderItem.objects.create(order=order, service=cart_item.service, quantity=quantity)
 
-            OrderItem.objects.create(order=order, service=cart_item.service, quantity=item_data['quantity'])
-
+        # Finalize the order
         order.total_price = total_price
+        order.name = name
+        order.phone = phone
+        order.house = house
+        order.road = road
+        order.ward = ward
+        order.city = city
+        order.state = state
         order.save()
+
+        # Clear cart items and deactivate the cart
         cart.items.all().delete()
-        cart.is_active = False  
+        cart.is_active = False
         cart.save()
-        # cart.delete()
+
+        # Send order confirmation emails
         subject = f"Order Confirmation - Order #{order.id}"
-        message = f"Dear {request.user.username},\n\nYour order has been successfully placed!\nOrder ID: {order.id}\nTotal Price: ${order.total_price}\n\nThank you for shopping with us!"
-        admin_message = f"A new order has been placed.\nOrder ID: {order.id}\nCustomer: {request.user.username}\nTotal Price: ${order.total_price}"
+        user_message = f"""
+        Dear {user.username},
+
+        Your order has been successfully placed!
+        Order ID: {order.id}
+        Total Price: ${order.total_price}
+
+        Address Details:
+        Contact Name: {name}
+        Phone: {phone}
+        Address: House #{house}, Road #{road}, Ward #{ward}, {city}, {state}
+
+        Thank you for shopping with us!
+        """
+        admin_message = f"New order placed.\nOrder ID: {order.id}\nCustomer: {user.username}\nTotal Price: ${order.total_price}"
 
         try:
-            send_mail(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                [request.user.email],
-                fail_silently=False,
-            )
-
-            send_mail(
-                f"New Order Notification - Order #{order.id}",
-                admin_message,
-                settings.DEFAULT_FROM_EMAIL,
-                [settings.DEFAULT_FROM_EMAIL],  
-                fail_silently=False,
-            )
-
+            # Send user email
+            send_mail(subject, user_message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
+            # Send admin notification
+            send_mail(f"New Order Notification - Order #{order.id}", admin_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_FROM_EMAIL], fail_silently=False)
         except Exception as e:
-            return Response({"detail": f"Error sending email: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": f"Email sending failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
-    
+
 class UserOrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        # Fetch orders for the authenticated user
         return Order.objects.filter(user=self.request.user).order_by('-created_at')

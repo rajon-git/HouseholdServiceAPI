@@ -104,3 +104,50 @@ class ClearCartView(APIView):
         
         cart.items.all().delete()  
         return Response({"message": "Cart cleared successfully"}, status=status.HTTP_200_OK)
+    
+
+class IncrementCartItemQuantityView(APIView):
+    def post(self, request, item_id):
+        session_key = request.session.session_key
+        cart = get_object_or_404(
+            Cart,
+            session_key=session_key if not request.user.is_authenticated else None,
+            user=request.user if request.user.is_authenticated else None
+        )
+        
+        cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
+        cart_item.quantity += 1
+        cart_item.save()
+
+        return Response({
+            "message": "Item quantity incremented.",
+            "cart_item": {
+                "service_id": cart_item.service.id,
+                "quantity": cart_item.quantity,
+            }
+        }, status=status.HTTP_200_OK)
+
+class DecrementCartItemQuantityView(APIView):
+    def post(self, request, item_id):
+        session_key = request.session.session_key
+        cart = get_object_or_404(
+            Cart,
+            session_key=session_key if not request.user.is_authenticated else None,
+            user=request.user if request.user.is_authenticated else None
+        )
+        
+        cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
+        
+        # Ensure the quantity doesn't go below 1
+        if cart_item.quantity > 1:
+            cart_item.quantity -= 1
+            cart_item.save()
+            return Response({
+                "message": "Item quantity decremented.",
+                "cart_item": {
+                    "service_id": cart_item.service.id,
+                    "quantity": cart_item.quantity,
+                }
+            }, status=status.HTTP_200_OK)
+        
+        return Response({"error": "Quantity cannot be less than 1."}, status=status.HTTP_400_BAD_REQUEST)
