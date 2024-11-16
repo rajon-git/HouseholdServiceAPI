@@ -4,6 +4,7 @@ from .serializers import CategorySerializer, ServiceSerializer, ReviewSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from .pagination import CustomPagination
+from rest_framework.permissions import IsAuthenticated
 
 
 class CategoryListCreateView(generics.ListCreateAPIView):
@@ -48,9 +49,16 @@ class ServiceDetailView(generics.RetrieveAPIView):
 
 
 class ReviewListCreateView(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
 
-class ReviewDetailView(generics.RetrieveAPIView):
-    queryset = Review.objects.all()
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class ReviewListByServiceView(generics.ListAPIView):
     serializer_class = ReviewSerializer
+
+    def get_queryset(self):
+        service_id = self.kwargs['pk']
+        return Review.objects.filter(service_id=service_id)

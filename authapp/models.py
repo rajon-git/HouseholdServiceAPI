@@ -8,5 +8,10 @@ class UserProfile(models.Model):
     phone = models.CharField(max_length=15, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
 
+    def get_object(self):
+        return UserProfile.objects.get(user=self.request.user)
+
     def __str__(self):
         return self.user.username
+    
+

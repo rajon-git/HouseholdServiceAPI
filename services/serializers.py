@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Category, Service, Review
+from authapp.serializers import UserSerializer
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -13,8 +14,10 @@ class ServiceSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class ReviewSerializer(serializers.ModelSerializer):
-    service = serializers.PrimaryKeyRelatedField(read_only=True) 
-    user = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    user = UserSerializer(read_only=True)
+    
     class Meta:
         model = Review
         fields = "__all__"
+        read_only_fields = ["user"]

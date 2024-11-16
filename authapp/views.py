@@ -9,6 +9,7 @@ from .serializers import UserSerializer, VerificationCodeSerializer, ResetPasswo
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from .models import UserProfile
+from cart.models import Cart
 
 VERIFICATION_CODE_TIMEOUT = 600  
 
@@ -84,12 +85,23 @@ class LoginView(generics.GenericAPIView):
         if user.check_password(password) and user.is_active:
             token, created = Token.objects.get_or_create(user=user)
 
+            session_key = request.session.session_key
+
+            if session_key:
+                anonymous_cart = Cart.objects.filter(session_key=session_key).first()
+                if anonymous_cart:
+                    # Move the entire anonymous cart to the user's cart
+                    anonymous_cart.user = user
+                    anonymous_cart.session_key = None  # Remove session key once it's transferred
+                    anonymous_cart.save()
+
             return Response({
                 "token": token.key, 
                 "user": { 
                     "id": user.id,
                     "username": user.username,
-                    "email": user.email
+                    "email": user.email,
+                    
                 },
                 "message": "Login successful."
             }, status=status.HTTP_200_OK)

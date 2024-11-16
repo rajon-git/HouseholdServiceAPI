@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.signals import user_logged_in
 from django.dispatch import receiver
+from django.db.models import Sum
 
 class ViewCartView(APIView):
     def get(self, request):
@@ -30,8 +31,9 @@ class ViewCartView(APIView):
                 cart = Cart.objects.get(session_key=session_key, user__isnull=True)
             except Cart.DoesNotExist:
                 return Response({"detail": "Your cart is empty."}, status=status.HTTP_200_OK)
-
+            
         serializer = CartSerializer(cart)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class AddToCartView(APIView):
