@@ -11,7 +11,7 @@ from rest_framework.authtoken.models import Token
 from .models import UserProfile
 from cart.models import Cart
 
-VERIFICATION_CODE_TIMEOUT = 600  
+VERIFICATION_CODE_TIMEOUT = 1200  
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = UserSerializer
