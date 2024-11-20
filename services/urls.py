@@ -1,7 +1,7 @@
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import CategoryListCreateView, CategoryDetailView, ServiceListCreateView, ServiceDetailView, ReviewListCreateView, ReviewListByServiceView,FeaturedServiceListView
+from .views import CategoryListCreateView, CategoryDetailView, ServiceListCreateView, ServiceDetailView, ReviewListCreateView, ReviewListByServiceView,FeaturedServiceListView, DiscountedServiceList, RelatedServiceList
 
 urlpatterns = [
     path('categories/', CategoryListCreateView.as_view(), name='category'),
@@ -11,4 +11,6 @@ urlpatterns = [
     path('featured/', FeaturedServiceListView.as_view(), name='service-detail'),
     path('reviews/create/', ReviewListCreateView.as_view(), name='review'),  
     path('reviews/<int:pk>/', ReviewListByServiceView.as_view(), name='review-detail'),
+    path('discounted/', DiscountedServiceList.as_view(), name='discounted-services'),
+    path('related/', RelatedServiceList.as_view(), name='related-services'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

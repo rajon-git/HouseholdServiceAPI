@@ -9,7 +9,9 @@ class Cart(models.Model):
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.session_key or f"Cart for {self.user.username}"
+        if self.user:
+            return f"Cart for {self.user.username}"
+        return f"Cart with session key: {self.session_key}"
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE, db_index=True)

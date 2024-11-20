@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import UserProfile
 
+
 class UserSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(write_only=True)
 
@@ -55,3 +56,18 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+    
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True, write_only=True)
+    new_password = serializers.CharField(required=True, write_only=True)
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Old password is incorrect.")
+        return value
+
+    def validate_new_password(self, value):
+        if len(value) < 8:
+            raise serializers.ValidationError("New password must be at least 8 characters long.")
+        return value

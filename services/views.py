@@ -62,3 +62,11 @@ class ReviewListByServiceView(generics.ListAPIView):
     def get_queryset(self):
         service_id = self.kwargs['pk']
         return Review.objects.filter(service_id=service_id)
+    
+class DiscountedServiceList(generics.ListAPIView):
+    queryset = Service.objects.filter(is_discount=True)
+    serializer_class = ServiceSerializer
+
+class RelatedServiceList(generics.ListAPIView):
+    queryset = Service.objects.filter(is_related=True)
+    serializer_class = ServiceSerializer

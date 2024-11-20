@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import RegisterView, LoginView, LogoutView, SendVerificationCodeView, ResetPasswordView, VerifyCodeView, ProfileUpdateView
+from .views import RegisterView, LoginView, LogoutView, SendVerificationCodeView, ResetPasswordView, VerifyCodeView, ProfileUpdateView,ChangePasswordView
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
@@ -9,4 +9,5 @@ urlpatterns = [
     path('forgot-password/', SendVerificationCodeView.as_view(), name='send-verification-code'),
     path('reset-password/', ResetPasswordView.as_view(), name='reset-password'),
     path('profile/', ProfileUpdateView.as_view(), name='profile-update'),
+    path('change-password/', ChangePasswordView.as_view(), name='change-password'),
 ]

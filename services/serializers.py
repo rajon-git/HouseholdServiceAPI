@@ -21,3 +21,5 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = "__all__"
         read_only_fields = ["user"]
+
+
