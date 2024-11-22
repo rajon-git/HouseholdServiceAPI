@@ -8,11 +8,10 @@ from cart.models import Cart, CartItem, Service
 from .serializers import OrderSerializer
 
 class OrderCreateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]  # Ensure only authenticated users can access
+    permission_classes = [permissions.IsAuthenticated] 
 
     def post(self, request):
         user = request.user
-        # Address details from the request
         name = request.data.get('name')
         phone = request.data.get('phone')
         house = request.data.get('house')
@@ -22,11 +21,9 @@ class OrderCreateView(APIView):
         state = request.data.get('state')
         payment_type = request.data.get('payment_type', 'cash')
 
-        # Validate required address fields
         if not all([name, phone, house, road, ward, city, state]):
             return Response({"detail": "All address fields are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Fetch the active cart for the user
         cart = Cart.objects.filter(user=user, is_active=True, items__is_active=True).first()
         if not cart:
             return Response({"detail": "Active cart not found."}, status=status.HTTP_404_NOT_FOUND)
@@ -51,11 +48,9 @@ class OrderCreateView(APIView):
             except (Service.DoesNotExist, CartItem.DoesNotExist):
                 return Response({"detail": f"Invalid service or cart item: {service_id}"}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Calculate total price and create OrderItem
             total_price += cart_item.get_total_price()
             OrderItem.objects.create(order=order, service=cart_item.service, quantity=quantity)
 
-        # Finalize the order
         order.total_price = total_price
         order.name = name
         order.phone = phone
@@ -66,12 +61,10 @@ class OrderCreateView(APIView):
         order.state = state
         order.save()
 
-        # Clear cart items and deactivate the cart
         cart.items.all().delete()
         cart.is_active = False
         cart.save()
 
-        # Send order confirmation emails
         subject = f"Order Confirmation - Order #{order.id}"
         user_message = f"""
         Dear {user.username},
@@ -90,9 +83,7 @@ class OrderCreateView(APIView):
         admin_message = f"New order placed.\nOrder ID: {order.id}\nCustomer: {user.username}\nTotal Price: ${order.total_price}"
 
         try:
-            # Send user email
             send_mail(subject, user_message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
-            # Send admin notification
             send_mail(f"New Order Notification - Order #{order.id}", admin_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_FROM_EMAIL], fail_silently=False)
         except Exception as e:
             return Response({"detail": f"Email sending failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -104,5 +95,19 @@ class UserOrderListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Fetch orders for the authenticated user
         return Order.objects.filter(user=self.request.user).order_by('-created_at')
+
+class OrderDetailView(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = OrderSerializer
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            order_id = kwargs.get('pk') 
+            order = self.get_queryset().get(id=order_id)
+            return Response(self.serializer_class(order).data, status=status.HTTP_200_OK)
+        except Order.DoesNotExist:
+            return Response({"detail": "Order not found or you don't have permission to view it."}, status=status.HTTP_404_NOT_FOUND)
