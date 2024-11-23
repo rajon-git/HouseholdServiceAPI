@@ -7,7 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY')
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -40,19 +40,19 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 # CORS_ALLOW_HEADERS = list(default_headers) + [
 #     'session_key',
 # ]
 
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000", 
-# ]
-# CSRF_TRUSTED_ORIGINS = [
-#     'https://householdserviceapi.onrender.com', 
-#     "http://localhost:3000",
-# ] 
+CORS_ALLOWED_ORIGINS = [
+    'https://householdfront.onrender.com'
+]
+CSRF_TRUSTED_ORIGINS = [
+    'https://householdserviceapi.onrender.com', 
+    'https://householdfront.onrender.com'
+] 
 APPEND_SLASH = False
 
 ROOT_URLCONF = 'HouseholdService.urls'
