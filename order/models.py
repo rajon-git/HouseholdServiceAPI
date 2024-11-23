@@ -15,7 +15,6 @@ class Order(models.Model):
     ], default='pending')
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
-    # Address details fields
     name = models.CharField(max_length=255, default='Dhaka')
     phone = models.CharField(max_length=15, default='Dhaka')
     house = models.CharField(max_length=255, default='Dhaka')

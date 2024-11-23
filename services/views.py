@@ -1,10 +1,13 @@
 from rest_framework import generics
 from .models import Category, Service, Review
-from .serializers import CategorySerializer, ServiceSerializer, ReviewSerializer
+from .serializers import CategorySerializer, ServiceSerializer, ReviewSerializer,RelatedServiceSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from .pagination import CustomPagination
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
 
 
 class CategoryListCreateView(generics.ListCreateAPIView):
@@ -68,5 +71,13 @@ class DiscountedServiceList(generics.ListAPIView):
     serializer_class = ServiceSerializer
 
 class RelatedServiceList(generics.ListAPIView):
-    queryset = Service.objects.filter(is_related=True)
-    serializer_class = ServiceSerializer
+    def get(self, request, service_id, format=None):
+        try:
+            service = Service.objects.get(id=service_id)
+        except Service.DoesNotExist:
+            return Response({'error': 'Service not found'}, status=status.HTTP_404_NOT_FOUND)
+        related_services = Service.objects.filter(
+            category=service.category
+        ).exclude(id=service.id)  
+        serializer = RelatedServiceSerializer(related_services, many=True)
+        return Response(serializer.data)

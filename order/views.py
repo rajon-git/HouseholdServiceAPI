@@ -71,7 +71,7 @@ class OrderCreateView(APIView):
 
         Your order has been successfully placed!
         Order ID: {order.id}
-        Total Price: ${order.total_price}
+        Total Price: {order.total_price} BDT
 
         Address Details:
         Contact Name: {name}
@@ -80,7 +80,7 @@ class OrderCreateView(APIView):
 
         Thank you for shopping with us!
         """
-        admin_message = f"New order placed.\nOrder ID: {order.id}\nCustomer: {user.username}\nTotal Price: ${order.total_price}"
+        admin_message = f"New order placed.\nOrder ID: {order.id}\nCustomer: {user.username}\nTotal Price: {order.total_price} BDT"
 
         try:
             send_mail(subject, user_message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)

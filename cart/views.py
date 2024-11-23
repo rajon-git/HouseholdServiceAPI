@@ -138,7 +138,6 @@ class DecrementCartItemQuantityView(APIView):
         
         cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
         
-        # Ensure the quantity doesn't go below 1
         if cart_item.quantity > 1:
             cart_item.quantity -= 1
             cart_item.save()

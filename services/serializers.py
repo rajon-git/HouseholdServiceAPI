@@ -14,12 +14,16 @@ class ServiceSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class ReviewSerializer(serializers.ModelSerializer):
-
     user = UserSerializer(read_only=True)
-    
     class Meta:
         model = Review
         fields = "__all__"
         read_only_fields = ["user"]
 
+class RelatedServiceSerializer(serializers.ModelSerializer):
+    category = serializers.StringRelatedField()
+    service = ServiceSerializer(read_only=True)
+    class Meta:
+        model = Service
+        fields = "__all__"
 
