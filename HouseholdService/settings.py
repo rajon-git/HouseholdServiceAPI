@@ -7,7 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY')
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -41,16 +41,17 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
+
+# CORS_ALLOW_HEADERS = list(default_headers) + [
+#     'session_key',
+# ]
 
 CORS_ALLOWED_ORIGINS = [
-    'https://householdfront.onrender.com',
-    'https://householdserviceapi.onrender.com', 
+    'https://householdfront.onrender.com'
 ]
 CSRF_TRUSTED_ORIGINS = [
-    'https://householdfront.onrender.com',
-    'https://householdserviceapi.onrender.com'
-    
+    'https://householdserviceapi.onrender.com', 
+    'https://householdfront.onrender.com'
 ] 
 APPEND_SLASH = False
 
@@ -109,9 +110,13 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
+
 TIME_ZONE = 'UTC'
+
 USE_I18N = True
+
 USE_TZ = True
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
 
 STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
@@ -140,10 +145,16 @@ REST_FRAMEWORK = {
 }
 
 
+CORS_ALLOW_CREDENTIALS = True
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
+# ]
+
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 3600
 SESSION_SAVE_EVERY_REQUEST = False
-SESSION_COOKIE_SECURE = True  
+SESSION_COOKIE_SECURE = True  # Use True for cross-origin session cookies
 CSRF_COOKIE_SECURE = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_SAMESITE = 'None'  
+SESSION_COOKIE_SAMESITE = 'None'  # None for cross-origin requests
