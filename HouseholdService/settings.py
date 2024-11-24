@@ -116,7 +116,10 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
+CSRF_TRUSTED_ORIGINS = [
+    'https://householdserviceapi.onrender.com',
+    'https://householdfront.onrender.com',  # If applicable for frontend
+]
 
 STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
