@@ -3,6 +3,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path,include
 from django.views.generic import TemplateView
+from django.urls import re_path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -10,5 +11,5 @@ urlpatterns = [
     path('service/', include('services.urls')),
     path('cart/', include('cart.urls')),
     path('order/', include('order.urls')),
-    path('', TemplateView.as_view(template_name='index.html'), name='index'),
+    re_path(r'^(?!api/).*$', TemplateView.as_view(template_name='index.html'), name='react-frontend'),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
