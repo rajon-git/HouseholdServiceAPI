@@ -57,10 +57,16 @@ APPEND_SLASH = False
 
 ROOT_URLCONF = 'HouseholdService.urls'
 
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'frontend/build/static')]
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+REACT_APP_DIR = os.path.join(BASE_DIR, 'frontend/build')
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [REACT_APP_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -118,12 +124,10 @@ USE_I18N = True
 USE_TZ = True
 CSRF_TRUSTED_ORIGINS = [
     'https://householdserviceapi.onrender.com',
-    'https://householdfront.onrender.com',  # If applicable for frontend
+    'https://householdfront.onrender.com',  
 ]
 
-STATIC_URL = 'static/'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -149,10 +153,6 @@ REST_FRAMEWORK = {
 
 
 CORS_ALLOW_CREDENTIALS = True
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",
-#     "http://127.0.0.1:3000",
-# ]
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 3600
