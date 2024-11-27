@@ -47,31 +47,24 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     'https://householdfront.onrender.com'
 ]
-CSRF_TRUSTED_ORIGINS = [
-    'https://householdserviceapi.onrender.com', 
-    'https://householdfront.onrender.com'
-] 
+# CSRF_TRUSTED_ORIGINS = [
+#     'https://householdserviceapi.onrender.com', 
+#     'https://householdfront.onrender.com'
+# ] 
 APPEND_SLASH = False
 
 ROOT_URLCONF = 'HouseholdService.urls'
 
-# STATIC_URL = 'static/'
-# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'frontend/build/static')]
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    BASE_DIR / "frontend/build/static",  
-]
-STATIC_ROOT = BASE_DIR / "staticfiles"  
 
+STATIC_URL = '/static/'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-REACT_APP_DIR = os.path.join(BASE_DIR, 'frontend/build')
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # Add your custom template directories here
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
