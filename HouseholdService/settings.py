@@ -71,7 +71,7 @@ REACT_APP_DIR = os.path.join(BASE_DIR, 'frontend/build')
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [REACT_APP_DIR],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # Add your custom template directories here
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
