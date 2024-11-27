@@ -13,4 +13,4 @@ urlpatterns = [
     path('reviews/<int:pk>/', ReviewListByServiceView.as_view(), name='review-detail'),
     path('discounted/', DiscountedServiceList.as_view(), name='discounted-services'),
     path('related-products/<int:service_id>/', RelatedServiceList.as_view(), name='related-services'),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] 
