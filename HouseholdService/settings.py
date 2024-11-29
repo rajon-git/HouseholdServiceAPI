@@ -40,18 +40,23 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# CORS_ALLOWED_ORIGINS = [
+#     'https://householdfront.onrender.com',
+# ]
+
+# CSRF_TRUSTED_ORIGINS = [
+#     'https://householdserviceapi.onrender.com/', 
+#     'https://householdfront.onrender.com'
+# ] 
+
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',  # Frontend during development
-    'https://householdfront.onrender.com',  # Production frontend
-]
-
-# CSRF Settings
-CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
-    'https://householdfront.onrender.com',
-    'https://householdserviceapi.onrender.com',
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://householdserviceapi.onrender.com/', 
+    'http://localhost:3000'
+] 
 APPEND_SLASH = False
 
 ROOT_URLCONF = 'HouseholdService.urls'
