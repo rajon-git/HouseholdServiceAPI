@@ -36,6 +36,48 @@ class ViewCartView(APIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+# class AddToCartView(APIView):
+#     def post(self, request, *args, **kwargs):
+#         session_key = request.session.session_key
+#         if not session_key:
+#             request.session.save()
+#             session_key = request.session.session_key
+
+#         if request.user.is_authenticated:
+#             cart, _ = Cart.objects.get_or_create(user=request.user)
+#         else:
+#             cart, _ = Cart.objects.get_or_create(session_key=session_key)
+
+#         cart.is_active = True
+#         cart.save()  
+
+#         service_id = request.data.get('service_id')
+#         quantity = request.data.get('quantity', 1)
+#         if not service_id or quantity < 1:
+#             return Response({"error": "Invalid service or quantity."}, status=status.HTTP_400_BAD_REQUEST)
+#         try:
+#             service = Service.objects.get(id=service_id)
+#         except Service.DoesNotExist:
+#             return Response({"error": "Service not found."}, status=status.HTTP_404_NOT_FOUND)
+
+#         cart_item, created = CartItem.objects.get_or_create(
+#             cart=cart,
+#             service=service,
+#             defaults={'quantity': quantity, 'is_active': True}
+#         )
+#         if not created:
+#             cart_item.quantity += quantity
+#             cart_item.save()
+
+#         return Response({
+#             "message": "Item added to cart.",
+#             "cart_item": {
+#                 "service_id": service.id,
+#                 "quantity": cart_item.quantity,
+#             },
+#             "session_key": session_key,
+#         }, status=status.HTTP_201_CREATED)
+
 class AddToCartView(APIView):
     def post(self, request, *args, **kwargs):
         session_key = request.session.session_key
@@ -43,23 +85,55 @@ class AddToCartView(APIView):
             request.session.save()
             session_key = request.session.session_key
 
+        # Handle authenticated users
         if request.user.is_authenticated:
-            cart, _ = Cart.objects.get_or_create(user=request.user)
+            user = request.user
+            # Retrieve all carts associated with the user
+            user_carts = Cart.objects.filter(user=user)
+
+            # Ensure there's only one active cart for the user
+            if user_carts.exists():
+                main_cart = user_carts.first()  # Select the first cart as the main cart
+
+                # Merge all other carts into the main cart
+                for cart in user_carts.exclude(id=main_cart.id):
+                    for item in cart.items.all():
+                        existing_item = main_cart.items.filter(service=item.service).first()
+                        if existing_item:
+                            # Update quantity if the item already exists
+                            existing_item.quantity += item.quantity
+                            existing_item.save()
+                        else:
+                            # Reassign the item to the main cart
+                            item.cart = main_cart
+                            item.save()
+                    # Delete the merged cart
+                    cart.delete()
+            else:
+                # If no cart exists for the user, create one
+                main_cart = Cart.objects.create(user=user)
+
+            cart = main_cart  # Use the merged or newly created main cart
+
+        # Handle anonymous users
         else:
-            cart, _ = Cart.objects.get_or_create(session_key=session_key)
+            cart, _ = Cart.objects.get_or_create(session_key=session_key, user__isnull=True)
 
         cart.is_active = True
-        cart.save()  
+        cart.save()
 
+        # Get service_id and quantity from the request data
         service_id = request.data.get('service_id')
         quantity = request.data.get('quantity', 1)
         if not service_id or quantity < 1:
             return Response({"error": "Invalid service or quantity."}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             service = Service.objects.get(id=service_id)
         except Service.DoesNotExist:
             return Response({"error": "Service not found."}, status=status.HTTP_404_NOT_FOUND)
 
+        # Add or update the cart item
         cart_item, created = CartItem.objects.get_or_create(
             cart=cart,
             service=service,
