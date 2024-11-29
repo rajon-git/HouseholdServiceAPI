@@ -47,8 +47,7 @@ CORS_ALLOWED_ORIGINS = [
 
 CSRF_TRUSTED_ORIGINS = [
     'https://householdserviceapi.onrender.com/', 
-    'https://householdfront.onrender.com',
-    'http://localhost:3000'
+    'https://householdfront.onrender.com'
 ] 
 APPEND_SLASH = False
 
