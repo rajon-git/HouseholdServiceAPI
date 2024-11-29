@@ -77,7 +77,6 @@ class ViewCartView(APIView):
 #             },
 #             "session_key": session_key,
 #         }, status=status.HTTP_201_CREATED)
-
 class AddToCartView(APIView):
     def post(self, request, *args, **kwargs):
         session_key = request.session.session_key
@@ -93,25 +92,25 @@ class AddToCartView(APIView):
             user = None
             carts = Cart.objects.filter(session_key=session_key, user__isnull=True)
 
-        # If there are multiple carts for the user, merge them
-        if carts.count() > 1:
-            main_cart = carts.first()  # Choose the first cart as the main cart
-            for cart in carts[1:]:
-                # Merge the items of the other carts into the main cart
-                for item in cart.items.all():
-                    existing_item = main_cart.items.filter(service=item.service).first()
-                    if existing_item:
-                        existing_item.quantity += item.quantity
-                        existing_item.save()
-                    else:
-                        item.cart = main_cart
-                        item.save()
-                # Delete the redundant cart after merging
-                cart.delete()
+        # Handle the case where no carts exist
+        if not carts.exists():
+            main_cart = Cart.objects.create(user=user, session_key=session_key, is_active=True)
         else:
+            # If multiple carts exist, merge them into one
             main_cart = carts.first()
+            if carts.count() > 1:
+                for cart in carts[1:]:
+                    for item in cart.items.all():
+                        existing_item = main_cart.items.filter(service=item.service).first()
+                        if existing_item:
+                            existing_item.quantity += item.quantity
+                            existing_item.save()
+                        else:
+                            item.cart = main_cart
+                            item.save()
+                    cart.delete()
 
-        # Mark the cart as active
+        # Ensure the main cart is active
         main_cart.is_active = True
         main_cart.save()
 
@@ -120,7 +119,7 @@ class AddToCartView(APIView):
         quantity = request.data.get('quantity', 1)
         if not service_id or quantity < 1:
             return Response({"error": "Invalid service or quantity."}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         try:
             service = Service.objects.get(id=service_id)
         except Service.DoesNotExist:
