@@ -41,12 +41,14 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    'https://householdfront.onrender.com'
+    'https://householdfront.onrender.com',
+    'http://localhost:3000'
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://householdserviceapi.onrender.com/', 
-    'https://householdfront.onrender.com'
+    'https://householdfront.onrender.com',
+    'http://localhost:3000'
 ] 
 APPEND_SLASH = False
 
