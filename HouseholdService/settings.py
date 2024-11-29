@@ -40,17 +40,14 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# CORS_ALLOW_ALL_ORIGINS = True
-
-
-
 CORS_ALLOWED_ORIGINS = [
     'https://householdfront.onrender.com'
 ]
-# CSRF_TRUSTED_ORIGINS = [
-#     'https://householdserviceapi.onrender.com', 
-#     'https://householdfront.onrender.com'
-# ] 
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://householdserviceapi.onrender.com/', 
+    'https://householdfront.onrender.com'
+] 
 APPEND_SLASH = False
 
 ROOT_URLCONF = 'HouseholdService.urls'
@@ -155,7 +152,7 @@ CORS_ALLOW_CREDENTIALS = True
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 3600
 SESSION_SAVE_EVERY_REQUEST = False
-SESSION_COOKIE_SECURE = True  # Use True for cross-origin session cookies
+SESSION_COOKIE_SECURE = True  
 CSRF_COOKIE_SECURE = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_SAMESITE = 'None'  # None for cross-origin requests
+SESSION_COOKIE_SAMESITE = 'None'  
