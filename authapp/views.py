@@ -71,30 +71,90 @@ class VerifyCodeView(generics.GenericAPIView):
         
         return Response({"error": "Invalid verification code."}, status=status.HTTP_400_BAD_REQUEST)
         
+# class LoginView(generics.GenericAPIView):
+#     serializer_class = UserSerializer
+
+#     def post(self, request, *args, **kwargs):
+#         email = request.data.get('email')
+#         password = request.data.get('password')
+     
+#         try:
+#             user = User.objects.get(email=email)
+#         except User.DoesNotExist:
+#             return Response({"error": "Invalid Credentials or account not activated."}, status=status.HTTP_400_BAD_REQUEST)
+        
+#         if user.check_password(password) and user.is_active:
+#             token, created = Token.objects.get_or_create(user=user)
+
+#             session_key = request.session.session_key
+
+#             if session_key:
+#                 anonymous_cart = Cart.objects.filter(session_key=session_key).first()
+#                 if anonymous_cart:
+#                     # Move the entire anonymous cart to the user's cart
+#                     anonymous_cart.user = user
+#                     anonymous_cart.session_key = None  # Remove session key once it's transferred
+#                     anonymous_cart.save()
+
+#             return Response({
+#                 "token": token.key, 
+#                 "user": { 
+#                     "id": user.id,
+#                     "username": user.username,
+#                     "email": user.email,
+                    
+#                 },
+#                 "message": "Login successful."
+#             }, status=status.HTTP_200_OK)
+        
+#         return Response({"error": "Invalid Credentials or account not activated."}, status=status.HTTP_400_BAD_REQUEST)
+
 class LoginView(generics.GenericAPIView):
     serializer_class = UserSerializer
 
     def post(self, request, *args, **kwargs):
         email = request.data.get('email')
         password = request.data.get('password')
-     
+        
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             return Response({"error": "Invalid Credentials or account not activated."}, status=status.HTTP_400_BAD_REQUEST)
         
         if user.check_password(password) and user.is_active:
+            # Generate or get the token
             token, created = Token.objects.get_or_create(user=user)
 
+            # Get the session key from the request (for anonymous users)
             session_key = request.session.session_key
 
             if session_key:
-                anonymous_cart = Cart.objects.filter(session_key=session_key).first()
+                # Get the anonymous cart associated with the session_key
+                anonymous_cart = Cart.objects.filter(session_key=session_key, user__isnull=True).first()
                 if anonymous_cart:
-                    # Move the entire anonymous cart to the user's cart
-                    anonymous_cart.user = user
-                    anonymous_cart.session_key = None  # Remove session key once it's transferred
-                    anonymous_cart.save()
+                    # Retrieve any existing cart for the user (if exists)
+                    user_cart = Cart.objects.filter(user=user).first()
+
+                    if user_cart:
+                        # If the user already has a cart, merge the anonymous cart into it
+                        for item in anonymous_cart.items.all():
+                            # Merge cart items (if the item exists, update the quantity)
+                            existing_item = user_cart.items.filter(service=item.service).first()
+                            if existing_item:
+                                existing_item.quantity += item.quantity
+                                existing_item.save()
+                            else:
+                                # Add the new item to the user's cart
+                                item.cart = user_cart
+                                item.save()
+
+                        # Delete the anonymous cart after merging
+                        anonymous_cart.delete()
+                    else:
+                        # If the user doesn't have an existing cart, assign the anonymous cart to the user
+                        anonymous_cart.user = user
+                        anonymous_cart.session_key = None  # Remove session_key
+                        anonymous_cart.save()
 
             return Response({
                 "token": token.key, 
@@ -102,13 +162,12 @@ class LoginView(generics.GenericAPIView):
                     "id": user.id,
                     "username": user.username,
                     "email": user.email,
-                    
                 },
                 "message": "Login successful."
             }, status=status.HTTP_200_OK)
         
         return Response({"error": "Invalid Credentials or account not activated."}, status=status.HTTP_400_BAD_REQUEST)
-        
+     
 class LogoutView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
