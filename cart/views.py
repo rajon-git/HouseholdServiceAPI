@@ -36,47 +36,6 @@ class ViewCartView(APIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-# class AddToCartView(APIView):
-#     def post(self, request, *args, **kwargs):
-#         session_key = request.session.session_key
-#         if not session_key:
-#             request.session.save()
-#             session_key = request.session.session_key
-
-#         if request.user.is_authenticated:
-#             cart, _ = Cart.objects.get_or_create(user=request.user)
-#         else:
-#             cart, _ = Cart.objects.get_or_create(session_key=session_key)
-
-#         cart.is_active = True
-#         cart.save()  
-
-#         service_id = request.data.get('service_id')
-#         quantity = request.data.get('quantity', 1)
-#         if not service_id or quantity < 1:
-#             return Response({"error": "Invalid service or quantity."}, status=status.HTTP_400_BAD_REQUEST)
-#         try:
-#             service = Service.objects.get(id=service_id)
-#         except Service.DoesNotExist:
-#             return Response({"error": "Service not found."}, status=status.HTTP_404_NOT_FOUND)
-
-#         cart_item, created = CartItem.objects.get_or_create(
-#             cart=cart,
-#             service=service,
-#             defaults={'quantity': quantity, 'is_active': True}
-#         )
-#         if not created:
-#             cart_item.quantity += quantity
-#             cart_item.save()
-
-#         return Response({
-#             "message": "Item added to cart.",
-#             "cart_item": {
-#                 "service_id": service.id,
-#                 "quantity": cart_item.quantity,
-#             },
-#             "session_key": session_key,
-#         }, status=status.HTTP_201_CREATED)
 class AddToCartView(APIView):
     def post(self, request, *args, **kwargs):
         session_key = request.session.session_key
@@ -84,50 +43,25 @@ class AddToCartView(APIView):
             request.session.save()
             session_key = request.session.session_key
 
-        # Check if the user is authenticated
         if request.user.is_authenticated:
-            user = request.user
-            carts = Cart.objects.filter(user=user)
+            cart, _ = Cart.objects.get_or_create(user=request.user)
         else:
-            user = None
-            carts = Cart.objects.filter(session_key=session_key, user__isnull=True)
+            cart, _ = Cart.objects.get_or_create(session_key=session_key)
 
-        # Handle the case where no carts exist
-        if not carts.exists():
-            main_cart = Cart.objects.create(user=user, session_key=session_key, is_active=True)
-        else:
-            # If multiple carts exist, merge them into one
-            main_cart = carts.first()
-            if carts.count() > 1:
-                for cart in carts[1:]:
-                    for item in cart.items.all():
-                        existing_item = main_cart.items.filter(service=item.service).first()
-                        if existing_item:
-                            existing_item.quantity += item.quantity
-                            existing_item.save()
-                        else:
-                            item.cart = main_cart
-                            item.save()
-                    cart.delete()
+        cart.is_active = True
+        cart.save()  
 
-        # Ensure the main cart is active
-        main_cart.is_active = True
-        main_cart.save()
-
-        # Get service_id and quantity from the request data
         service_id = request.data.get('service_id')
         quantity = request.data.get('quantity', 1)
         if not service_id or quantity < 1:
             return Response({"error": "Invalid service or quantity."}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
             service = Service.objects.get(id=service_id)
         except Service.DoesNotExist:
             return Response({"error": "Service not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Add or update the cart item
         cart_item, created = CartItem.objects.get_or_create(
-            cart=main_cart,
+            cart=cart,
             service=service,
             defaults={'quantity': quantity, 'is_active': True}
         )
@@ -143,7 +77,6 @@ class AddToCartView(APIView):
             },
             "session_key": session_key,
         }, status=status.HTTP_201_CREATED)
-
 
 
 class RemoveFromCartView(APIView):
