@@ -17,24 +17,61 @@ class ViewCartView(APIView):
 
         if not session_key:
             return Response({"detail": "Your cart is empty."}, status=status.HTTP_200_OK)
-      
+
         if request.user.is_authenticated:
             user = request.user
-            try:
-                cart = Cart.objects.get(user=user)
-            except Cart.DoesNotExist:
-                return Response({"detail": "Cart not found for authenticated user."}, status=status.HTTP_404_NOT_FOUND)
+            carts = Cart.objects.filter(user=user)
         else:
-            
             user = None
-            try:
-                cart = Cart.objects.get(session_key=session_key, user__isnull=True)
-            except Cart.DoesNotExist:
-                return Response({"detail": "Your cart is empty."}, status=status.HTTP_200_OK)
-            
-        serializer = CartSerializer(cart)
+            carts = Cart.objects.filter(session_key=session_key, user__isnull=True)
 
+        if not carts.exists():
+            return Response({"detail": "Your cart is empty."}, status=status.HTTP_200_OK)
+
+        if carts.count() > 1:
+            # Merge cart items into the first cart
+            main_cart = carts.first()
+            for cart in carts[1:]:
+                for item in cart.items.all():
+                    existing_item = main_cart.items.filter(service=item.service).first()
+                    if existing_item:
+                        existing_item.quantity += item.quantity
+                        existing_item.save()
+                    else:
+                        item.cart = main_cart
+                        item.save()
+                cart.delete()
+        else:
+            main_cart = carts.first()
+
+        serializer = CartSerializer(main_cart)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# class ViewCartView(APIView):
+#     def get(self, request):
+#         session_key = request.GET.get("session_key") or request.session.session_key
+
+#         if not session_key:
+#             return Response({"detail": "Your cart is empty."}, status=status.HTTP_200_OK)
+      
+#         if request.user.is_authenticated:
+#             user = request.user
+#             try:
+#                 cart = Cart.objects.get(user=user)
+#             except Cart.DoesNotExist:
+#                 return Response({"detail": "Cart not found for authenticated user."}, status=status.HTTP_404_NOT_FOUND)
+#         else:
+            
+#             user = None
+#             try:
+#                 cart = Cart.objects.get(session_key=session_key, user__isnull=True)
+#             except Cart.DoesNotExist:
+#                 return Response({"detail": "Your cart is empty."}, status=status.HTTP_200_OK)
+            
+#         serializer = CartSerializer(cart)
+
+#         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class AddToCartView(APIView):
     def post(self, request, *args, **kwargs):
